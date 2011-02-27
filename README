@@ -1,6 +1,27 @@
-Centralised repo to support video sites and resolve their urls, to simplify add-on development.
+Centralised module to support video sites and resolve their urls, to simplify add-on development.
 
 If you want to add a video site or develop this, create a github account and message anarchintosh for access to this repo
 
 Use script.module.mechanize as an example for how to write a module?
 http://code.google.com/p/anarchintosh-projects/downloads/detail?name=script.module.mechanize.zip&can=2&q=
+
+Would be good to include each as a separate .py for sake of neatness.
+Also some resolvers would like to use early login (ie. icefilms gets the login cookies for megaup when the addon is started)
+
+Links to various addons that provide python code to resolve sites, that could be merged into this module:
+
+Fantasti.cc (various adult sites including megaporn/video)
+http://forum.xbmc.org/showthread.php?s=6f457598ff8d2fa8f9e8d05f6b6c3a9c&t=93753
+
+Megauplo*d
+https://github.com/icefilms-xbmc/megaroutines
+
+Hotfile
+http://code.google.com/p/daledewd-xbmc-repo/
+
+Fastpass TV (Various streaming sites)
+http://forum.xbmc.org/showthread.php?t=94994
+
+A really good megavid resolver and other streaming site resolvers
+http://code.google.com/p/xbmc-tvshack/source/browse/branches/DHARMA/src/#src%2Flinkresolvers
+
