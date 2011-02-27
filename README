@@ -1,0 +1,6 @@
+Centralised repo to support video sites and resolve their urls, to simplify add-on development.
+
+If you want to add a video site or develop this, create a github account and message anarchintosh for access to this repo
+
+Use script.module.mechanize as an example for how to write a module?
+http://code.google.com/p/anarchintosh-projects/downloads/detail?name=script.module.mechanize.zip&can=2&q=
