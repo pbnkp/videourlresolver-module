@@ -2,9 +2,11 @@
 
 """
  Megavideo and Megaporn-Video Resolver 0.1
- Anarchintosh Copyleft
+ Copyleft Anarchintosh 
 
  This resolver is based on work from Ksosez, Pedro Guedes, Voinage and Coolblaze.
+
+ If anyone gets the time, please update with code from http://code.google.com/p/python-megavideo-parser/
 
  Commands:
  
@@ -22,8 +24,7 @@ porn = 'http://www.megaporn.com/video/'
 regular = 'http://www.megavideo.com/'
 
 import os,re
-import urllib2,cookielib
-import mechanize
+import urllib,urllib2,cookielib
 import logging
 log = logging.getLogger("megavideo")
 
@@ -33,13 +34,6 @@ def openfile(filepath):
      contents=fh.read()
      fh.close()
      return contents
-    
-def __doLogin(baseurl, cookiepath, myuser, mypass):
-
-  if myuser and mypass:
-    return __new_GetCookie(baseurl, cookiepath, myuser, mypass)
-  else:
-    return None
 
 def __calcDecriptionMix(hash, keyMix):
   """Mixes the decription keys into the hash and returns the updated hash
@@ -169,6 +163,56 @@ def __calculateFileHash(str1, key1, key2):
   # convert each binary chunk to a hex string for the final hash
   return __toHexDecriptionString(chunks)
 
+
+
+  
+    return __GetCookie(baseurl, cookiepath, myuser, mypass)
+  else:
+    return None
+
+def check_login(source):
+        #feed me some mega page source
+        #returns 'free' or 'premium' if logged in
+        #returns 'none' if not logged in
+        
+        login = re.search('<b>Welcome</b>', source)
+        premium = re.search('flashvars.status = "premium";', source)        
+
+        if login is not None:
+             if premium is not None:
+                  return 'premium'
+             elif premium is None:
+                  return 'free'
+        else:
+             return login
+          
+def __doLogin(baseurl, cookiepath, username, password):
+
+    if username and password:
+        #delete the old cookie
+        try:
+              os.remove(cookiepath)
+        except:
+              pass
+
+        #build the login code, from user, pass, baseurl and cookie
+        login_data = urllib.urlencode({'username' : username, 'password' : password, 'login' : 1, 'redir' : 1})   
+        req = urllib2.Request(baseurl + '?c=login', login_data)
+        req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
+        cj = cookielib.LWPCookieJar()
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+
+        #do the login and get the response
+        response = response.read(opener.open(req))
+
+        login = check_login(response)
+
+        if login == 'free' or login == 'premium':
+            cj.save(cookiepath)
+
+        return login
+    else:
+         return None
   
 def __getPremiumUrl(baseurl, cookiepath, code):
 
@@ -209,131 +253,5 @@ def __getPublicUrl(baseurl, cookiepath, code):
     
     return ["http://www" + s[0] + baseurl[10:25] + "files/" + __calculateFileHash(un[0], k1[0], k2[0]) + "/?.flv"]
 
-def __new_GetCookie(baseurl, cookiepath, megauser, megapass):
-
-     try:
-          os.remove(cookiepath)
-     except:
-          pass
-     
-     if megauser is not False or megapass is not False:
-               # Browser
-               br = mechanize.Browser()
-
-               # Cookie Jar
-               cj = cookielib.LWPCookieJar()
-               br.set_cookiejar(cj)
-
-               # Browser options
-               br.set_handle_equiv(True)
-               br.set_handle_gzip(True)
-               br.set_handle_redirect(True)
-               br.set_handle_referer(True)
-               br.set_handle_robots(False)
-
-               # Follows refresh 0 but not hangs on refresh > 0
-               br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
-
-               # User-Agent
-               br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
-
-
-               # The site we will navigate into, handling it's session
-               login_url = baseurl + '?c=login'
-               br.open(login_url)
-               
-
-               # Select the first (index zero) form
-               br.select_form('loginfrm')
-
-               #User credentials
-               br.form['username'] = megauser
-               br.form['password'] = megapass
-               br.submit()
-
-               #check if login worked
-               loginerror="Username and password do not match" in br.response().read()
-               if loginerror == True:
-                    return False
-                    try:
-                         os.remove(cookiepath)
-                    except:
-                         pass
-               elif loginerror == False:
-                    cj.save(cookiepath)
-                    return True
-
-def __old_GetCookie(baseurl, cookiepath, login, password):
-
-  log.debug("getCookie")
-  ficherocookies = cookiepath
-
-  cj = None
-  ClientCookie = None
-  cookielib = None
-
-  try:
-    import cookielib
-  except ImportError:
-    try:
-      import ClientCookie
-    except ImportError:
-      urlopen = urllib2.urlopen
-      Request = urllib2.Request
-    else:
-      urlopen = ClientCookie.urlopen
-      Request = ClientCookie.Request
-      cj = ClientCookie.LWPCookieJar()
-  else:
-    urlopen = urllib2.urlopen
-    Request = urllib2.Request
-    cj = cookielib.LWPCookieJar()
-
-  if cj is not None:
-    if os.path.isfile(ficherocookies):
-      cj.load(ficherocookies)
-
-    if cookielib is not None:
-      opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-      urllib2.install_opener(opener)
-
-    else:
-      opener = ClientCookie.build_opener(ClientCookie.HTTPCookieProcessor(cj))
-      ClientCookie.install_opener(opener)
-
-  signup_url = baseurl+"?s=signup"
-  
-  txdata = "action=login&cnext=&snext=&touser=&user=&nickname=" + login + "&password=" + password
-  txheaders = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3',
-          'Referer': signup_url}
-  req = Request(signup_url, txdata, txheaders)
-
-  handle = urlopen(req)
-
-  cj.save(ficherocookies)                     # save the cookies again    
-
-  handle.read()
-
-  data = handle.read()
-
-  log.debug("----------------------")
-  log.debug("Respuesta de getUrl")
-  log.debug("----------------------")
-  log.debug(data)
-  log.debug("----------------------")
-  handle.close()
-
-  cookiedata = openfile(ficherocookies)
-
-  log.debug("----------------------")
-  log.debug("Cookies despues")
-  log.debug("----------------------")
-  log.debug(cookiedata)
-  log.debug("----------------------")
-
-  patronvideos = 'user="([^"]+)"'
-  matches = re.compile(patronvideos, re.DOTALL).findall(cookiedata)
-  if len(matches) == 0:
-    patronvideos = 'user=([^\;]+);'
-    matches = re.compile(patronvideos, re.DOTALL).findall(cookiedata)  
-  return matches[0]
+mycookie = '/Users/J/icefilms git/videourlresolver-module/script.module.videourlresolver/lib/videourlresolver/cookies.lwp'
+print __doLogin(regular,mycookie,'anarchintosh','nestormakhno1920')

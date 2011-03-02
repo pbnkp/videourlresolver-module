@@ -1,24 +1,28 @@
 '''
-Megaupload 0.1
-Copyleft Anarchintosh.
+ Megaupload and Megaporn 0.2
+ Copyleft Anarchintosh (all code)
 
-Should be extended to handle Megaporn.
+ Also gets megavideo links from megaupload pages.(can't do this for megaporn)
 
-Depends on mechanize module for login.
-Could be hacked to remove this dependency.
+ If account is None or Free, you have to wait 46 or 26 Seconds respectively before accessing the stream. 
 
-Can also get megavideo links from megaupload pages.
+ Megaup and megaporn use different logins, so store the cookies in different places.
+ 
+ Commands:
 
-Cut down from megaroutines, which will be rendered unneccessary by this videoresolver.
-Still needs to be tweaked a bit to remove unnecessary code.
+ __doLogin(baseurl, cookiepath, username, password)
 
-Functions need to be de-classed, so they can be called from the new class.
+ resolve_url(url,cookiepath,aviget=True,force_megavid=True)
+
+ dls_limited(baseurl,cookiepath)
 
 '''
+#valid baseurl
+regular = 'http://www.megaupload.com/'
+porn = 'http://www.megaporn.com/'
 
 import os,re
 import urllib2,cookielib
-import mechanize
 
 def openfile(filename):
      fh = open(filename, 'r')
@@ -44,9 +48,12 @@ def checkurl(url):
            elif ispornvid is None:
               return 'pornup'
 
-#set names of important files     
-cookiefile='cookies.lwp' 
-
+def check_if_vid_was_removed(source):
+     checker = re.search('Unfortunately, the link you have clicked is not available.',source)
+     if checker is not None:
+          return True
+     elif checker is None:
+          return False
 
 def get_dir(mypath, dirname):
     #...creates sub-directories if they are not found.
@@ -54,68 +61,70 @@ def get_dir(mypath, dirname):
     if not os.path.exists(subpath):
         os.makedirs(subpath)
     return subpath
+      
 
-          
-class megaupload:
-   def __init__(self,path):
-        self.class_name='megaupload'
-        self.path = get_dir(path,'megaroutine_files')
-        self.classpath = get_dir(self.path,self.class_name)
-        self.cookie = os.path.join(self.classpath,cookiefile)
-
-   def megavid_force(self,url,disable_cookies=True):
-        source=self.load_pagesrc(url,disable_cookies)
-        megavidlink=self.get_megavid(source)
+def megavid_force(url):
+     #load a megaup page without cookies, to ensure that the user can get the megavid link.
+        source=load_pagesrc(url,enable_cookies=False)
+        megavidlink=get_megavid(source)
         return megavidlink
       
-   def resolve_megaup(self,url,aviget=False,force_megavid=False):
+def resolve_url(url,cookiepath,aviget=True,force_megavid=True):
 
-        #bring together all the functions into a simple user-friendly function.
+        #bring together all the functions into a simple addon-friendly function.
 
-        source=self.load_pagesrc(url)
-
+        source=load_pagesrc(url,cookiepath,enable_cookies=True)
+        
         #if source is a url (from a Direct Downloads re-direct) not pagesource
         if source.startswith('http://'):
              filelink=source
-
-             #can't get megavid link if using direct download, however, can load megaup page without cookies, then scrape.
-             #this is time consuming, hence the force_megavid flag needed to enable it.
-             if force_megavid is False:
+             '''
+             Can't get megavid link if using direct download
+             However, as a workaround, can load megaup page without cookies, then scrape.
+             '''        
+             if force_megavid is True:
+                  megavidlink=megavid_force(url)
+             else:
                   megavidlink=None
-             elif force_megavid is True:
-                  megavidlink=self.megavid_force(url)
-
+             
              #speed patch (we know its premium, since we're getting a direct download)
              logincheck='premium'
 
         else: # if source is html page code...
 
              #scrape the direct filelink from page
-             filelink=self.get_filelink(source,aviget)
+             filelink=get_filelink(source,aviget)
 
              #scrape the megavideo link if there is one on the page
-             megavidlink=self.get_megavid(source)
+             megavidlink=get_megavid(source)
 
-             logincheck=self.check_login(source)
+             #verify what the user is logged in as.
+             logincheck=check_login(source)
 
-        filename=self._get_filename(filelink)
+        filename=_get_filename(filelink)
         
         return filelink,filename,megavidlink,logincheck
 
 
-   def load_pagesrc(self,url,disable_cookies=False):
+def load_pagesrc(url,cookiepath,enable_cookies=True):
      
      #loads page source code. redirect url is returned if Direct Downloads is enabled.
         
      urltype=checkurl(url)
      if urltype is 'megaup' or 'megaporn':
-          link=GetURL(url,self,disable_cookies)
-          return link
+
+          source=GetURL(url,cookiepath,enable_cookies)
+
+          vid_removed = check_if_vid_was_removed(source)
+          if vid_removed == True:
+               return False
+          else:
+               return source
      else:
           return False
 
 
-   def check_login(self,source):
+def check_login(source):
         #feed me some megaupload page source
         #returns 'free' or 'premium' if logged in
         #returns 'none' if not logged in
@@ -129,22 +138,25 @@ class megaupload:
              elif premium is None:
                   return 'free'
         elif login is None:
-             return 'none'
+             return None
 
  
-   def dls_limited(self):
+def dls_limited(baseurl,cookiepath):
      #returns True if download limit has been reached.
 
      truestring='Download limit exceeded'
      falsestring='Hooray Download Success'   
 
-     #url to a special small text file that contains the words: Hooray Download Success        
-     testurl='http://www.megaupload.com/?d=PQCIEIP7'
+     #url to a special small text file that contains the words: Hooray Download Success
+     if baseurl == regular:
+          testurl = 'http://www.megaupload.com/?d=PQCIEIP7'
+     elif baseurl == porn:
+          testurl = ''
 
-     source=self.load_pagesrc(testurl)
-     fileurl=self.get_filelink(source)
+     source=load_pagesrc(testurl)
+     fileurl=get_filelink(source)
 
-     link=GetURL(fileurl,self)
+     link=GetURL(cookiepath,fileurl)
 
      exceeded = re.search(truestring, link)
      #notexceeded = re.search(falsestring, link)
@@ -155,54 +167,46 @@ class megaupload:
           #if notexceeded is not None:
                return False
 
-   def delete_login(self):
+def delete_login(cookiepath):
      #clears cookies
      try:
-          os.remove(self.cookie)
+          os.remove(cookiepath)
      except:
           pass
-        
-   def set_login(self,megauser=False,megapass=False):
-
-          #refresh the cookies if successful
-          login=Do_Login(self,megauser,megapass)
-
-          #return whether login was successful
-          return login
    
-   def get_megavid ( self,source ):
+def get_megavid (source):
         #verify source is megaupload 
         checker='<span class="down_txt3">Download link:</span> <a href="http://www.megaupload.com/'
         ismegaup=re.search(checker, source)
 
         if ismegaup is not None:
            #scrape for megavideo link (first check its there)
-           megavidlink = re.search('View on Megavideo', source)
-           if megavidlink is not None:
-              megavidlink = re.compile('<a href="http://www.megavideo.(.+?)"').findall(source)
-              megavid=megavidlink[0]
-              megavid = 'http://www.megavideo.'+megavid
-              return megavid
-           if megavidlink is None:
-              #no megavideo link on page
-              return None
+           megavid = re.search('View on Megavideo', source)
+
+           if megavid is None:
+                #no megavideo link on page
+                return None
+              
+           else:
+                megavidlink = 'http://www.megavideo.' + ((re.compile('<a href="http://www.megavideo.(.+?)"').findall(source))[0])
+                return megavidlink         
+
         if ismegaup is None:
-           print 'not a megaupload url'
-           return None
+             return None
 
 
-   def get_filelink(self,source,aviget=False):
+def get_filelink(source,aviget=True):
           # load megaupload page and scrapes and adds videolink, passes through partname.  
           #print 'getting file link....'
 
-          #try getting the premium link. if it returns none, use free link scraper.
-          match1=re.compile('<a href="(.+?)" class="down_ad_butt1">').findall(source)
-          if str(match1)=='[]':
-               match2=re.compile('id="downloadlink"><a href="(.+?)" class=').findall(source)
-               url=match2[0]
-          else:
-               url=match1[0]
+          login = check_login(source)
 
+          if login == 'premium':
+               #get the premium link.
+               url = (re.compile('<a href="(.+?)" class="down_ad_butt1">').findall(source))[0]
+
+          if login == 'free' or login == None:
+              url = (re.compile('id="downloadlink"><a href="(.+?)" class=').findall(source))[0]
 
           #aviget is an option where if a .divx file is found, it is renamed to .avi (necessary for XBMC)
           if aviget is True and url.endswith('divx'):
@@ -211,125 +215,77 @@ class megaupload:
                     return url
 
 
-   def _get_filename(self,url=False,source=False):
+def _get_filename(url=False,source=False):
         #accept either source or url
         if url is False:
              if source is not False:
-                  url=self.get_filelink(source)
+                  url=get_filelink(source)
         
         #get file name from url (ie my_vid.avi)
         name = re.split('\/+', url)
         return name[-1]
 
-def Do_Login(self,megauser,megapass):
 
-     try:
-          os.remove(self.cookie)
-     except:
-          pass
-     
-     if megauser is not False or megapass is not False:
-               # Browser
-               br = mechanize.Browser()
+def __doLogin(baseurl, cookiepath, username, password):
 
-               # Cookie Jar
-               cj = cookielib.LWPCookieJar()
-               br.set_cookiejar(cj)
+    if username and password:
+        #delete the old cookie
+        try:
+              os.remove(cookiepath)
+        except:
+              pass
 
-               # Browser options
-               br.set_handle_equiv(True)
-               br.set_handle_gzip(True)
-               br.set_handle_redirect(True)
-               br.set_handle_referer(True)
-               br.set_handle_robots(False)
+        #build the login code, from user, pass, baseurl and cookie
+        login_data = urllib.urlencode({'username' : username, 'password' : password, 'login' : 1, 'redir' : 1})   
+        req = urllib2.Request(baseurl + '?c=login', login_data)
+        req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
+        cj = cookielib.LWPCookieJar()
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 
-               # Follows refresh 0 but not hangs on refresh > 0
-               br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+        #do the login and get the response
+        response = response.read(opener.open(req))
 
-               # User-Agent
-               br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
+        login = check_login(response)
 
+        if login == 'free' or login == 'premium':
+            cj.save(cookiepath)
 
-               # The site we will navigate into, handling it's session
-               if self.class_name is 'megaupload':
-                    siteurl='http://www.megaupload.com/?c=login'
-
-               elif self.class_name is 'megavideo':
-                    siteurl='http://www.megavideo.com/?c=login'
-
-               elif self.class_name is 'megaporn':
-                    siteurl='http://www.megaporn.com/?c=login'
-
-               elif self.class_name is 'megapornvid':
-                    siteurl='http://www.megaporn.com/?c=login'
-                    
-               br.open(siteurl)
-               
-
-               # Select the first (index zero) form
-               br.select_form('loginfrm')
-
-               #User credentials
-               br.form['username'] = megauser
-               br.form['password'] = megapass
-               br.submit()
-
-               #check if login worked
-               loginerror="Username and password do not match" in br.response().read()
-               if loginerror == True:
-                    return False
-                    try:
-                         os.remove(self.cookie)
-                    except:
-                         pass
-               elif loginerror == False:
-                    cj.save(self.cookie)
-                    return True
+        return login
+    else:
+         return None
                     
 
-def GetURL(url,self=False,disable_cookies=False):
+def GetURL(url,cookiepath,enable_cookies=True):
      #print 'processing url: '+url
 
-     #logic to designate whether to handle cookies
-     urltype=checkurl(url)
-     if disable_cookies==False:
-          if urltype is 'megaup' or 'megaporn' or 'megavid':
-               if self is not False:
-                    if os.path.exists(self.cookie):
-                         use_cookie=True
-                    else:
-                         use_cookie=False  
-               else:
-                    use_cookie=False  
-          else:
-                    use_cookie=False  
-     else:
-          use_cookie=False
+     # use cookie, if logged in.
+     if enable_cookies==True and cookiepath is not None:
+          if os.path.exists(cookiepath):
+               cj = cookielib.LWPCookieJar()
+               cj.load(cookiepath)
+               req = urllib2.Request(url)
+               req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')       
+               opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+               response = opener.open(req)
+
+               #check if we might have been redirected (megapremium Direct Downloads...)
+               finalurl = response.geturl()
+
+               #if we weren't redirected, return the page source
+               if finalurl is url:
+                    link=response.read()
+                    response.close()
+                    return link
+
+               #if we have been redirected, return the redirect url
+               elif finalurl is not url:                    
+                    return finalurl
 
      # don't use cookie, if not logged in          
-     if use_cookie is False:
+     else:
           req = urllib2.Request(url)
           req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')       
           response = urllib2.urlopen(req)
           link=response.read()
           response.close()
           return link
-
-     # use cookie, if logged in
-     if use_cookie is True:
-          cj = cookielib.LWPCookieJar()
-          cj.load(self.cookie)
-          req = urllib2.Request(url)
-          req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')       
-          opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-          response = opener.open(req)
-
-          #check if we were redirected (megapremium Direct Downloads...)
-          finalurl = response.geturl()
-          if finalurl is url:
-               link=response.read()
-               response.close()
-               return link
-          elif finalurl is not url:
-               #if we have been redirected, return the redirect url
-               return finalurl
