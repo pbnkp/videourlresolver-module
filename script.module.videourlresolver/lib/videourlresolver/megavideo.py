@@ -1,4 +1,13 @@
 # -*- coding: UTF-8 -*-
+
+'''
+megavideo 0.1 Copyleft Anarchintosh
+
+
+original authors:
+pguedes,coolblaze,voinage
+'''
+
 import os, re, urllib2, logging
 import utils.settings as settings
 
@@ -10,7 +19,10 @@ log.info("Cookiefile: %s" % COOKIEFILE)
 def resolve(page):
   mega = re.compile('<param name="movie" value="http://www.megavideo.com/v/(.+?)">').findall(page)
   mega[0] = mega[0][0:8]
-  megavideoUrl = __getUrl(mega[0])
+
+  video_code =
+
+  megavideoUrl = __getUrl(video_code)
   return [megavideoUrl]
 
 #Coolblaze-xbmc forums.
