@@ -1,44 +1,103 @@
 # -*- coding: UTF-8 -*-
 
-'''
-megavideo 0.1 Copyleft Anarchintosh
+"""
+ Megavideo and Megaporn-Video Resolver 0.1
+ Anarchintosh Copyleft
 
+ This resolver is based on work from Ksosez, Pedro Guedes, Voinage and Coolblaze.
 
-original authors:
-pguedes,coolblaze,voinage
-'''
+ Commands:
+ 
+ __doLogin(baseurl, cookiepath, username, password)
 
-import os, re, urllib2, logging
-import utils.settings as settings
+ __getPremiumUrl(baseurl, cookiepath, code)
 
-COOKIEFILE = os.path.join(os.getcwd(), 'cookies.lwp')
+ __getPublicUrl(baseurl, cookiepath, code)
+ (in __getPublicUrl, None is a valid setting for cookiepath)
 
+"""
+
+#global strings for valid baseurl
+porn = 'http://www.megaporn.com/video/'
+regular = 'http://www.megavideo.com/'
+
+import os,re
+import urllib2,cookielib
+import mechanize
+import logging
 log = logging.getLogger("megavideo")
-log.info("Cookiefile: %s" % COOKIEFILE)
 
-def resolve(page):
-  mega = re.compile('<param name="movie" value="http://www.megavideo.com/v/(.+?)">').findall(page)
-  mega[0] = mega[0][0:8]
 
-  video_code =
-
-  megavideoUrl = __getUrl(video_code)
-  return [megavideoUrl]
-
-#Coolblaze-xbmc forums.
-def __ajoin(arr):
-  strtest = ''
-  for num in range(len(arr)):
-    strtest = strtest + str(arr[num])
-  return strtest
-
-def __asplit(mystring):
-  arr = []
-  for num in range(len(mystring)):
-    arr.append(mystring[num])
-  return arr
+def openfile(filepath):
+     fh = open(filepath, 'r')
+     contents=fh.read()
+     fh.close()
+     return contents
     
-def __decrypt(str1, key1, key2):
+def __doLogin(baseurl, cookiepath, myuser, mypass):
+
+  if myuser and mypass:
+    return __new_GetCookie(baseurl, cookiepath, myuser, mypass)
+  else:
+    return None
+
+def __calcDecriptionMix(hash, keyMix):
+  """Mixes the decription keys into the hash and returns the updated hash
+  @param hash: the hash to merge the keys into
+  @param keyMix: the array of keys to mix"""
+  for i in range(128):
+    hash[i] = str(int(hash[i]) ^ int(keyMix[i + 256]) & 1)
+  return "".join(hash)
+
+def __toHexDecriptionString(binaryChunks):
+  """Converts an array of binary strings into a string of the corresponding hex chunks merged
+  This method will first loop through the binary strings converting each one into it's correspondent
+  hexadecimal string and then merge the resulting array into a string
+  @param binaryChunks: an array of binary strings
+  @return: a string of the corresponding hexadecimal strings, merged"""
+  hexChunks = []
+  for binChunk in binaryChunks:
+    hexChunks.append("%x" % int(binChunk, 2))    
+  return "".join(hexChunks)
+
+def __doDecriptionChunks(binaryMergedString):
+  """Break a string of 0's and 1's in pieces of 4 chars
+  @param binaryMergedString: a string of 0's and 1's to break in 4-part pieces
+  @return: an array of 4 character parts of the original string"""
+  binaryChunks = []
+  for index in range(0, len(binaryMergedString), 4):
+    binaryChunk = binaryMergedString[index:index + 4]
+    binaryChunks.append(binaryChunk)
+  return binaryChunks
+
+def __doDecriptionSwaps(hash, keys):
+  """Swap the first 256 indices from keys on the hash with the last 128 elements from the hash
+  @param hash: the hash to do swaps on
+  @param keys: the generated keys to use as indices for the swaps
+  @return: hash after swaps"""
+  for index in range(256, 0, -1):
+    key = keys[index]
+    swapTarget = index % 128
+    oldHashKey = hash[key]
+    hash[key] = hash[swapTarget]
+    hash[swapTarget] = oldHashKey
+  return hash
+
+def __computeIndices(key1, key2):
+  """Generate an array of 384 indices with values 0-127
+  @param key1: first seed to generate indices from
+  @param key2: second seed to generate indices from
+  @return: an array of 384 indices with values between 0 and 127"""
+  indices = []
+  for i in range(384):
+    key1 = (int(key1) * 11 + 77213) % 81371
+    key2 = (int(key2) * 17 + 92717) % 192811
+    indices.append((int(key1) + int(key2)) % 128)
+  return indices
+
+def __explodeBin(str1):
+  # explode each char in str1 into it;s binary representation
+  # and collect the result into __reg1
   __reg1 = []
   __reg3 = 0
   while (__reg3 < len(str1)):
@@ -93,140 +152,122 @@ def __decrypt(str1, key1, key2):
                                     __reg1.append("1111")
 
     __reg3 = __reg3 + 1
-
-  mtstr = __ajoin(__reg1)
-  __reg1 = __asplit(mtstr)
-  __reg6 = []
-  __reg3 = 0
-  while (__reg3 < 384):
-  
-    key1 = (int(key1) * 11 + 77213) % 81371
-    key2 = (int(key2) * 17 + 92717) % 192811
-    __reg6.append((int(key1) + int(key2)) % 128)
-    __reg3 = __reg3 + 1
-  
-  __reg3 = 256
-  while (__reg3 >= 0):
-
-    __reg5 = __reg6[__reg3]
-    __reg4 = __reg3 % 128
-    __reg8 = __reg1[__reg5]
-    __reg1[__reg5] = __reg1[__reg4]
-    __reg1[__reg4] = __reg8
-    __reg3 = __reg3 - 1
-  
-  __reg3 = 0
-  while (__reg3 < 128):
-  
-    __reg1[__reg3] = int(__reg1[__reg3]) ^ int(__reg6[__reg3 + 256]) & 1
-    __reg3 = __reg3 + 1
-
-  __reg12 = __ajoin(__reg1)
-  __reg7 = []
-  __reg3 = 0
-  while (__reg3 < len(__reg12)):
-
-    __reg9 = __reg12[__reg3:__reg3 + 4]
-    __reg7.append(__reg9)
-    __reg3 = __reg3 + 4
+  return list("".join(__reg1))
     
-  
-  __reg2 = []
-  __reg3 = 0
-  while (__reg3 < len(__reg7)):
-    __reg0 = __reg7[__reg3]
-    holder2 = __reg0
-  
-    if (holder2 == "0000"):
-      __reg2.append("0")
-    else: 
-      if (__reg0 == "0001"):
-        __reg2.append("1")
-      else: 
-        if (__reg0 == "0010"):
-          __reg2.append("2")
-        else: 
-          if (__reg0 == "0011"):
-            __reg2.append("3")
-          else: 
-            if (__reg0 == "0100"):
-              __reg2.append("4")
-            else: 
-              if (__reg0 == "0101"): 
-                __reg2.append("5")
-              else: 
-                if (__reg0 == "0110"): 
-                  __reg2.append("6")
-                else: 
-                  if (__reg0 == "0111"): 
-                    __reg2.append("7")
-                  else: 
-                    if (__reg0 == "1000"): 
-                      __reg2.append("8")
-                    else: 
-                      if (__reg0 == "1001"): 
-                        __reg2.append("9")
-                      else: 
-                        if (__reg0 == "1010"): 
-                          __reg2.append("a")
-                        else: 
-                          if (__reg0 == "1011"): 
-                            __reg2.append("b")
-                          else: 
-                            if (__reg0 == "1100"): 
-                              __reg2.append("c")
-                            else: 
-                              if (__reg0 == "1101"): 
-                                __reg2.append("d")
-                              else: 
-                                if (__reg0 == "1110"): 
-                                  __reg2.append("e")
-                                else: 
-                                  if (__reg0 == "1111"): 
-                                    __reg2.append("f")
-                                  
-    __reg3 = __reg3 + 1
+def __calculateFileHash(str1, key1, key2):
+  # explode hex to bin strings, collapse to a string and return char array
+  hash = __explodeBin(str1)
+  # based on the keys, generate an array of 384 (256 + 128) values
+  decriptIndices = __computeIndices(key1, key2)
+  # from 256 to 0, swap hash[decriptIndices[x]] with hash[__reg3 % 128]
+  hash = __doDecriptionSwaps(hash, decriptIndices)
+  # replace the first 128 chars in hash with the formula:
+  #  hash[x] = hash[x] * decriptIndices[x+256] & 1
+  hash = __calcDecriptionMix(hash, decriptIndices)
+  # split __reg12 in chunks of 4 chars
+  chunks = __doDecriptionChunks(hash)  
+  # convert each binary chunk to a hex string for the final hash
+  return __toHexDecriptionString(chunks)
 
-  endstr = __ajoin(__reg2)
-  return endstr
-
-def __getUrl(mega):
-  if settings.isSet("megavideopremium"):
-    return __getPremiumUrl(mega)
-  else:
-    return __getPublicUrl(mega)
   
-def __getPremiumUrl(code):
+def __getPremiumUrl(baseurl, cookiepath, code):
+
+  login_code = (re.compile("user=(.+?)\;").findall(openfile(cookiepath)))[0]
+  
   log.debug("Use premium mode")
-  megavideologin = settings.get("megavideouser")
-  log.debug("Megavideo Username: '%s'" % megavideologin)
-  megavideopassword = settings.get("megavideopassword")
-  #log.debug("megavideopassword=#"+megavideopassword+"#")
-  megavideocookie = __getMegavideoUserCookie(megavideologin, megavideopassword)
-  log.debug("Megavideo cookie: '%s'" % megavideocookie)
-  req = urllib2.Request("http://www.megavideo.com/xml/player_login.php?u=" + megavideocookie + "&v=" + code)
+  log.debug("Megavideo cookie: '%s'" % login_code)
+  req = urllib2.Request(baseurl + "xml/player_login.php?u=" + login_code + "&v=" + code)
   req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3')
   patronvideos = 'downloadurl="([^"]+)"'
   matches = re.compile(patronvideos, re.DOTALL).findall(urllib2.urlopen(req).read())
-  return matches[0].replace("%3A", ":").replace("%2F", "/").replace("%20", " ")
+  return [matches[0].replace("%3A", ":").replace("%2F", "/").replace("%20", " ")]
   
-def __getPublicUrl(code):
-  log.debug("Use normal mode")
-  req = urllib2.Request("http://www.megavideo.com/xml/videolink.php?v=" + code)
+def __getPublicUrl(baseurl, cookiepath, code):
+
+  if cookiepath is not None:
+
+    login_code = (re.compile("user=(.+?)\;").findall(openfile(cookiepath)))[0]
+
+    log.debug("Mega cookie: '%s'" % login_code)
+    url = baseurl + "xml/videolink.php?u=" + login_code + "&v=" + code
+
+  else:
+    log.debug("Use normal mode")
+    url = baseurl + "xml/videolink.php?v=" + code
+    
+  req = urllib2.Request(url)
   req.add_header('User-Agent', 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.8.1.14) Gecko/20080404 Firefox/2.0.0.14')
-  req.add_header('Referer', 'http://www.megavideo.com/')
+  req.add_header('Referer', baseurl)
   page = urllib2.urlopen(req);response = page.read();page.close()
+  print page
   errort = re.compile(' errortext="(.+?)"').findall(response)
   if len(errort) <= 0:
     s = re.compile(' s="(.+?)"').findall(response)
     k1 = re.compile(' k1="(.+?)"').findall(response)
     k2 = re.compile(' k2="(.+?)"').findall(response)
     un = re.compile(' un="(.+?)"').findall(response)
-  return "http://www" + s[0] + ".megavideo.com/files/" + __decrypt(un[0], k1[0], k2[0]) + "/?.flv"
-  
-def __getMegavideoUserCookie(login, password):
-  log.debug("getMegavideoUserCookie")
-  ficherocookies = COOKIEFILE
+    
+    return ["http://www" + s[0] + baseurl[10:25] + "files/" + __calculateFileHash(un[0], k1[0], k2[0]) + "/?.flv"]
+
+def __new_GetCookie(baseurl, cookiepath, megauser, megapass):
+
+     try:
+          os.remove(cookiepath)
+     except:
+          pass
+     
+     if megauser is not False or megapass is not False:
+               # Browser
+               br = mechanize.Browser()
+
+               # Cookie Jar
+               cj = cookielib.LWPCookieJar()
+               br.set_cookiejar(cj)
+
+               # Browser options
+               br.set_handle_equiv(True)
+               br.set_handle_gzip(True)
+               br.set_handle_redirect(True)
+               br.set_handle_referer(True)
+               br.set_handle_robots(False)
+
+               # Follows refresh 0 but not hangs on refresh > 0
+               br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+
+               # User-Agent
+               br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
+
+
+               # The site we will navigate into, handling it's session
+               login_url = baseurl + '?c=login'
+               br.open(login_url)
+               
+
+               # Select the first (index zero) form
+               br.select_form('loginfrm')
+
+               #User credentials
+               br.form['username'] = megauser
+               br.form['password'] = megapass
+               br.submit()
+
+               #check if login worked
+               loginerror="Username and password do not match" in br.response().read()
+               if loginerror == True:
+                    return False
+                    try:
+                         os.remove(cookiepath)
+                    except:
+                         pass
+               elif loginerror == False:
+                    cj.save(cookiepath)
+                    return True
+
+def __old_GetCookie(baseurl, cookiepath, login, password):
+
+  log.debug("getCookie")
+  ficherocookies = cookiepath
+
   cj = None
   ClientCookie = None
   cookielib = None
@@ -260,19 +301,21 @@ def __getMegavideoUserCookie(login, password):
       opener = ClientCookie.build_opener(ClientCookie.HTTPCookieProcessor(cj))
       ClientCookie.install_opener(opener)
 
-  url = "http://www.megavideo.com/?s=signup"
-  theurl = url
-  # an example url that sets a cookie,
-  # try different urls here and see the cookie collection you can make !
+  signup_url = baseurl+"?s=signup"
+  
   txdata = "action=login&cnext=&snext=&touser=&user=&nickname=" + login + "&password=" + password
   txheaders = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3',
-          'Referer':'http://www.megavideo.com/?s=signup'}
-  req = Request(theurl, txdata, txheaders)
+          'Referer': signup_url}
+  req = Request(signup_url, txdata, txheaders)
+
   handle = urlopen(req)
+
   cj.save(ficherocookies)                     # save the cookies again    
 
   handle.read()
+
   data = handle.read()
+
   log.debug("----------------------")
   log.debug("Respuesta de getUrl")
   log.debug("----------------------")
@@ -280,9 +323,7 @@ def __getMegavideoUserCookie(login, password):
   log.debug("----------------------")
   handle.close()
 
-  cookiedatafile = open(ficherocookies, 'r')
-  cookiedata = cookiedatafile.read()
-  cookiedatafile.close();
+  cookiedata = openfile(ficherocookies)
 
   log.debug("----------------------")
   log.debug("Cookies despues")
@@ -294,6 +335,5 @@ def __getMegavideoUserCookie(login, password):
   matches = re.compile(patronvideos, re.DOTALL).findall(cookiedata)
   if len(matches) == 0:
     patronvideos = 'user=([^\;]+);'
-    matches = re.compile(patronvideos, re.DOTALL).findall(cookiedata)
-    
+    matches = re.compile(patronvideos, re.DOTALL).findall(cookiedata)  
   return matches[0]

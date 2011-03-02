@@ -5,6 +5,7 @@
        provider-name="unbehagan, anarchintosh">
   <requires>
     <import addon="xbmc.python" version="1.0"/>
+    <import addon="script.module.mechanize" version="0.2.4"/>
   </requires>
   <extension point="xbmc.python.module"
              library="lib" />

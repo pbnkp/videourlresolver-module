@@ -1,18 +1,23 @@
 '''
-Megaupload 1.0
+Megaupload 0.1
 Copyleft Anarchintosh.
+
+Should be extended to handle Megaporn.
 
 Depends on mechanize module for login.
 Could be hacked to remove this dependency.
 
 Can also get megavideo links from megaupload pages.
 
-Cut down from megaroutines, which will be rendered unneccessary by videoresolver.
+Cut down from megaroutines, which will be rendered unneccessary by this videoresolver.
 Still needs to be tweaked a bit to remove unnecessary code.
+
+Functions need to be de-classed, so they can be called from the new class.
+
 '''
 
-import sys,os,re
-import urlparse,urllib,urllib2,cookielib
+import os,re
+import urllib2,cookielib
 import mechanize
 
 def openfile(filename):
@@ -20,11 +25,6 @@ def openfile(filename):
      contents=fh.read()
      fh.close()
      return contents
-
-def save(filename,contents):  
-     fh = open(filename, 'w')
-     fh.write(contents)  
-     fh.close()
 
 def checkurl(url):
    #get necessary url details
