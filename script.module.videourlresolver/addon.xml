@@ -2,7 +2,7 @@
 <addon id="script.module.videourlresolver"
        name="videourlresolver"
        version="0.0.1"
-       provider-name="xbmc addon coders">
+       provider-name="unbehagan, anarchintosh">
   <requires>
     <import addon="xbmc.python" version="1.0"/>
   </requires>
