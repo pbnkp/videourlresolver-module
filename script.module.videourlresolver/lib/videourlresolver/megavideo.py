@@ -252,6 +252,3 @@ def __getPublicUrl(baseurl, cookiepath, code):
     un = re.compile(' un="(.+?)"').findall(response)
     
     return ["http://www" + s[0] + baseurl[10:25] + "files/" + __calculateFileHash(un[0], k1[0], k2[0]) + "/?.flv"]
-
-mycookie = '/Users/J/icefilms git/videourlresolver-module/script.module.videourlresolver/lib/videourlresolver/cookies.lwp'
-print __doLogin(regular,mycookie,'anarchintosh','nestormakhno1920')
