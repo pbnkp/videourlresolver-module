@@ -1,6 +1,6 @@
 '''
- Megaupload and Megaporn 0.2
- Copyleft Anarchintosh (all code)
+ Megaupload and Megaporn Resolver v0.3
+ Copyleft (Licensed under GPLv3) Anarchintosh (all code)
 
  Also gets megavideo links from megaupload pages.(can't do this for megaporn)
 
@@ -12,17 +12,20 @@
 
  __doLogin(baseurl, cookiepath, username, password)
 
- resolve_url(url,cookiepath,aviget=True,force_megavid=True)
+ __resolveURL(url,cookiepath,aviget=True,force_megavid=True)
 
- dls_limited(baseurl,cookiepath)
+ __dls_limited(baseurl,cookiepath)
+
+ is_valid(cookiepath='YOUR_COOKIE_PATH',url='THE_URL')
 
 '''
-#valid baseurl
-regular = 'http://www.megaupload.com/'
-porn = 'http://www.megaporn.com/'
 
 import os,re
 import urllib2,cookielib
+
+#global strings for valid baseurl
+regular = 'http://www.megaupload.com/'
+porn = 'http://www.megaporn.com/'
 
 def openfile(filename):
      fh = open(filename, 'r')
@@ -48,12 +51,14 @@ def checkurl(url):
            elif ispornvid is None:
               return 'pornup'
 
-def check_if_vid_was_removed(source):
+def is_valid(cookiepath=None,url=False,source=False):
+     if source == False:
+          source = GetURL(url,cookiepath)
      checker = re.search('Unfortunately, the link you have clicked is not available.',source)
      if checker is not None:
-          return True
-     elif checker is None:
           return False
+     elif checker is None:
+          return True
 
 def get_dir(mypath, dirname):
     #...creates sub-directories if they are not found.
@@ -69,7 +74,7 @@ def megavid_force(url):
         megavidlink=get_megavid(source)
         return megavidlink
       
-def resolve_url(url,cookiepath,aviget=True,force_megavid=True):
+def __resolveURL(url,cookiepath,aviget=True,force_megavid=True):
 
         #bring together all the functions into a simple addon-friendly function.
 
@@ -114,12 +119,11 @@ def load_pagesrc(url,cookiepath,enable_cookies=True):
      if urltype is 'megaup' or 'megaporn':
 
           source=GetURL(url,cookiepath,enable_cookies)
-
-          vid_removed = check_if_vid_was_removed(source)
-          if vid_removed == True:
-               return False
-          else:
+          
+          if is_valid(source=source) == True:
                return source
+          else:
+               return False
      else:
           return False
 
@@ -129,7 +133,7 @@ def check_login(source):
         #returns 'free' or 'premium' if logged in
         #returns 'none' if not logged in
         
-        login = re.search('<b>Welcome</b>', source)
+        login = re.search('Welcome', source)
         premium = re.search('flashvars.status = "premium";', source)        
 
         if login is not None:
@@ -141,7 +145,7 @@ def check_login(source):
              return None
 
  
-def dls_limited(baseurl,cookiepath):
+def __dls_limited(baseurl,cookiepath):
      #returns True if download limit has been reached.
 
      truestring='Download limit exceeded'
@@ -243,16 +247,18 @@ def __doLogin(baseurl, cookiepath, username, password):
         opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
 
         #do the login and get the response
-        response = response.read(opener.open(req))
+        response = opener.open(req)
+        source = response.read()
+        response.close()
 
-        login = check_login(response)
+        login = check_login(source)
 
         if login == 'free' or login == 'premium':
             cj.save(cookiepath)
 
         return login
     else:
-         return None
+        return None
                     
 
 def GetURL(url,cookiepath,enable_cookies=True):
