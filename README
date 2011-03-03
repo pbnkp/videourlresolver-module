@@ -4,6 +4,9 @@ Centralised module to support video sites and resolve their urls, to simplify ad
 
 If you want to add a video site or develop this, create a github account and message anarchintosh for access to this repo
 
+To-do:
+Include some code to for XBMC waiting times, and recaptcha passthrough to xbmc.
+
 Links to various addons that provide python code to resolve sites, that could be merged into this module:
 
 Fantasti.cc (Various adult streaming sites)
