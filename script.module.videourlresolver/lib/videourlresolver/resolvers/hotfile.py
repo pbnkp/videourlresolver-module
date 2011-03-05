@@ -82,7 +82,10 @@ class HotFileModule(filehostmodule.FileHostModule):
 	def getFileName(self, url):
 		res=self.__getHFLinks(self.username,self.password,[url])
 		cols=res.replace("\n","").split("|")
-		if cols[0]!="":
-			if cols[1][0:4]=="http":
-				return cols[0]
+		try:
+			if cols[0]!="":
+				if cols[1][0:4]=="http":
+					return cols[0]
+		except:
+			pass
 		return None
