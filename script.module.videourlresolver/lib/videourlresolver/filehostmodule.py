@@ -1,7 +1,5 @@
-import os
 import re
 import urllib
-import traceback
         
 class FileHostModule:
     """
@@ -33,7 +31,7 @@ class FileHostModule:
         try:
             return (len(self.filterValidURLs([url]))>0)
         except:
-            return false
+            return False
     
     def filterValidURLs(self,urls):
         """
@@ -70,7 +68,7 @@ class FileHostModule:
         try:
             return (len(self.filterOnlineURLs([url]))>0)
         except:
-            return false
+            return False
 
     def isLoginValid(self,username,password):
         """
