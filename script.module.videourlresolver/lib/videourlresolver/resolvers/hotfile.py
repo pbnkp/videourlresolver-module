@@ -1,5 +1,5 @@
 
-import hashlib, urllib, urllib2, filehostmodule, os, re
+import hashlib, urllib, urllib2, filehostmodule, os
 
 class HotFileModule(filehostmodule.FileHostModule):
 	
@@ -70,23 +70,19 @@ class HotFileModule(filehostmodule.FileHostModule):
 		ret=[]
 		resa=res.split("\n")
 		for line in resa:
-			cols=line.split("|")
-			if cols[0]!="":
-				if cols[1][0:4]=="http":
-					ret.append(cols[1])
+			try:
+				cols=line.split("|")
+				if cols[0]!="":
+					if cols[1][0:4]=="http":
+						ret.append(cols[1])
+			except:
+				pass
 		return ret
 
 	def getFileName(self, url):
-		res=self.__getHFLinks(self.username,self.password,urls)
+		res=self.__getHFLinks(self.username,self.password,[url])
 		cols=res.replace("\n","").split("|")
 		if cols[0]!="":
 			if cols[1][0:4]=="http":
 				return cols[0]
 		return None
-		
-bla = HotFileModule()
-print bla.login("torbeng", "hagentest")
-urls=["http://hotfile.com/dl/108674985/fb8ae70/the.colbert.report.2011.03.03.mark.w.moffett.hdtv.xvid-lmao.avi.html","http://hotfile.com/dl/12/332/","http://hotfile.com/dl/108674446/7daa5bf/the.colbert.report.2011.03.03.mark.w.moffett.hdtv.xvid-lmao.avi.html","http://hotfile.com/dl/107020153/77419c0/Plants.vs.Zombies.1.025.MacOSX-P2P.zip.html","http://hotfile.com/dl/104509869/f57718c/"]
-print bla.filterOnlineURLs(urls)
-print bla.resolveURLs(urls)
-print bla.getFileName(urls[0])
