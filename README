@@ -10,7 +10,7 @@ Include some code to for XBMC waiting times, and recaptcha passthrough to xbmc.
 Links to various things that provide python code to resolve sites, that could be merged into this module:
 
 Filehoster resolvers:
-adapting python code from http://pyload.org/ and http://www.tucaneando.com/ . porting python code from http://svn.jdownloader.org/projects/show/jd
+adapting python code from http://pyload.org/ and http://www.tucaneando.com/ . porting java code from http://svn.jdownloader.org/projects/show/jd
 
 Fantasti.cc (Various adult streaming sites)
 http://forum.xbmc.org/showthread.php?s=6f457598ff8d2fa8f9e8d05f6b6c3a9c&t=93753
