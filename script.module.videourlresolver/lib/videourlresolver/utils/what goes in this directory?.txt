@@ -1,0 +1,6 @@
+directory for random utils that the resolvers or add-on coders might need.
+
+ie. 
+- a waiting time dialog displayer
+- a recaptcha passthrough
+- a http downloader/server so that a whole file can be cached (escape xbmc's small cache limit)
