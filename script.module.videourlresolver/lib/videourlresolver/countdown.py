@@ -1,16 +1,20 @@
 '''
-Countdown XBMC 0.1
+Countdown XBMC 0.2
 Copyleft Anarchintosh
 
 Set a countdown dialog for XBMC.
 Necessary for some filehosters eg. megaupload
 '''
+if __xbmc__ == False:
+    import time
+    
+def countdown(time_to_wait,title='',text=''):
+    if __xbmc__ == True:
+        do_xbmc_wait(time_to_wait,title,text)
+    else:
+        time.sleep(time_to_wait)
 
-def waiter(seconds):
-    if __xbmc__ == True: time.sleep(seconds)
-    else: xbmc.sleep((seconds*100))
-        
-def do_wait(time_to_wait,title):
+def do_xbmc_wait(time_to_wait,title,text):
 
     print 'waiting '+str(time_to_wait)+' secs'
 
@@ -21,12 +25,24 @@ def do_wait(time_to_wait,title):
     percent=0
     increment = 100 / time_to_wait
 
+    cancelled = False
     while secs < time_to_wait:
         secs = secs + 1
-        percent = increment*secs                   
-        display_countdown_info = 'Wait 'str((time_to_wait - secs)+1)+' seconds for the stream to become active.'
-        pDialog.update(percent, display_countdown_info)
-        waiter(1)
+        percent = increment*secs
+        secs_left = str((time_to_wait - secs))
+        remaining_display = ' Wait '+secs_left+' seconds for the video stream to activate...'
+        pDialog.update(percent,' '+text,remaining_display)
+        xbmc.sleep(1000)
+        if (pDialog.iscanceled()):
+             cancelled = True
+             break
+
+    if cancelled == True:     
+         print 'wait cancelled'
+         return False
+    else:
+         print 'done waiting'
+         return True
 
     print 'done waiting'
     return 'done'
