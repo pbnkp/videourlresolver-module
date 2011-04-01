@@ -93,6 +93,13 @@ import urllib,urllib2,cookielib
 regular = 'http://www.megaupload.com/'
 porn = 'http://www.megaporn.com/'
 
+def setBaseURL(baseurl):
+    # API feature to neaten up how functions are used
+    if baseurl == 'regular':
+       return regular
+    elif baseurl == 'porn':
+       return porn
+
 def openfile(filename):
 	fh = open(filename, 'r')
 	contents=fh.read()
@@ -213,6 +220,8 @@ def check_login(source):
 def __dls_limited(baseurl,cookiepath):
 	#returns True if download limit has been reached.
 
+        baseurl=setBaseURL(baseurl)
+
 	truestring='Download limit exceeded'
 	falsestring='Hooray Download Success'	
 
@@ -296,6 +305,8 @@ def _get_filename(url=False,source=False):
 
 
 def __doLogin(baseurl, cookiepath, username, password):
+
+        baseurl=setBaseURL(baseurl)
 
 	if username and password:
 		#delete the old cookie
