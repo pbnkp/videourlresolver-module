@@ -1,4 +1,70 @@
 '''
+ Videoresolver controller class for megaupload
+'''
+import filehostmodule
+
+class MegauploadModule(filehostmodule.FileHostModule):
+	
+	def __init__(self):
+		self.username=""
+		self.password=""
+		self.baseurl=regular
+
+	def getIconFileHost(self):
+		return os.path.join(__file__, "resolver_icons", "megaupload.png")
+	
+	def getRegularExpression(self):
+		return r"http://(www.)?hotfile\.com/dl/\d+/[0-9a-zA-Z]+/"
+	
+	def filterOnlineURLs(self, urls):
+		validurls = self.filterValidURLs(urls)
+		return self.__checkHFLinks(self.username,self.password,validurls)
+
+	def isLoginValid(self, username, password):
+		return not a==".invalid username or password"
+
+	def isLoginForStreaming(self, username, password):
+		return self.__hotfileapicall("getuserinfo",username,password,[]).find("is_premium=1")>-1
+	
+	def login(self, username, password):
+		self.username=username
+		self.password=password
+		return self.isLoginValid(username, password)
+
+	def isLoggedIn(self):
+		return self.isLoginValid(self.username, self.password)
+	
+	def logout(self):
+		self.username=""
+		self.password=""
+		return True
+
+	def resolveURLs(self, urls):
+		res=self.__getHFLinks(self.username,self.password,urls)
+		ret=[]
+		resa=res.split("\n")
+		for line in resa:
+			try:
+				cols=line.split("|")
+				if cols[0]!="":
+					if cols[1][0:4]=="http":
+						ret.append(cols[1])
+			except:
+				pass
+		return ret
+
+	def getFileName(self, url):
+		res=self.__getHFLinks(self.username,self.password,[url])
+		cols=res.replace("\n","").split("|")
+		try:
+			if cols[0]!="":
+				if cols[1][0:4]=="http":
+					return cols[0]
+		except:
+			pass
+		return None
+
+'''
  Megaupload and Megaporn Resolver v0.3
  Copyleft (Licensed under GPLv3) Anarchintosh (all code)
 
@@ -8,7 +74,7 @@
 
  Megaup and megaporn use different logins, so store the cookies in different places.
  
- Commands:
+ Commands/Functions:
 
  __doLogin(baseurl, cookiepath, username, password)
 
@@ -16,7 +82,7 @@
 
  __dls_limited(baseurl,cookiepath)
 
- is_valid(cookiepath='YOUR_COOKIE_PATH',url='THE_URL')
+ is_online(cookiepath='YOUR_COOKIE_PATH',url='THE_URL')
 
 '''
 
@@ -51,7 +117,7 @@ def checkurl(url):
 			elif ispornvid is None:
 				return 'pornup'
 
-def is_valid(cookiepath=None,url=False,source=False):
+def is_online(cookiepath=None,url=False,source=False):
 	if source == False:
 		source = GetURL(url,cookiepath)
 	checker = re.search('Unfortunately, the link you have clicked is not available.',source)
@@ -120,7 +186,7 @@ def load_pagesrc(url,cookiepath,enable_cookies=True):
 
 		source=GetURL(url,cookiepath,enable_cookies)
 		
-		if is_valid(source=source) == True:
+		if is_online(source=source) == True:
 			return source
 		else:
 			return False

@@ -1,21 +1,49 @@
 # -*- coding: UTF-8 -*-
 
 """
- Megavideo and Megaporn-Video Resolver v0.3
+ Megavideo and Megaporn-Video Resolver v0.4
  Copyleft (Licensed under GPLv3) Anarchintosh 
 
  This resolver is based on work from:
  Alessio Glorioso, Ksosez, Pedro Guedes, Voinage and Coolblaze.
 
- Commands:
+
+
+
+ -------Commands:---------
+
+ for baseurl use either 'porn' or 'regular'.
+
+
+ TO RESOLVE A URL
+ - (None is a valid setting for cookiepath)
+ - This returns a list for these things;
+ - FLV_File,Original_File,title,description,runtime
+
+ ====================================================
+ print megavideo.resolveURL(baseurl, cookiepath, url)
+ ====================================================
+
  
- __doLogin(baseurl, cookiepath, username, password)
 
- __resolveURL(baseurl, cookiepath, url)
- (in __getPublicUrl, None is a valid setting for cookiepath)
+ TO CHECK IF A LINK IS STILL ONLINE (optional):
+ - Returns True or False
 
- is_valid(baseurl,url)
+ ===================================== 
+ print megavideo.is_valid(baseurl,url)
+ =====================================
 
+
+
+ TO LOG IN (GET A LOGIN COOKIE) (optional):
+ - Returns 'Free' or 'Premium' if login is successful
+ - Returns None if login fails
+
+ ================================================================
+ print megavideo.doLogin(baseurl, cookiepath, username, password)
+ ================================================================
+
+ 
 """
 
 import os,re
@@ -29,6 +57,13 @@ regular = 'http://www.megavideo.com/'
 firefox_header = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-GB; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3'
 
 log = logging.getLogger("megavideo")
+
+def setBaseURL(baseurl):
+    # API feature to neaten up how functions are used
+    if baseurl == 'regular':
+       return regular
+    elif baseurl == 'porn':
+       return porn
 
 def openfile(filepath):
      fh = open(filepath, 'r')
@@ -51,8 +86,10 @@ def check_login(source):
                   return 'free'
         else:
              return login
-      
-def __doLogin(baseurl, cookiepath, username, password):
+
+def doLogin(baseurl, cookiepath, username, password):
+
+    baseurl=setBaseURL(baseurl)
 
     if username and password:
         #delete the old cookie
@@ -102,7 +139,9 @@ def __getPremiumUrl(baseurl, cookiepath, code, login_code):
        return None
 
   
-def __resolveURL(baseurl, cookiepath, url):
+def resolveURL(baseurl, cookiepath, url):
+
+  baseurl=setBaseURL(baseurl)
 
   #get the code from a url, unless only code is supplied.
   l = len(url)
@@ -129,11 +168,12 @@ def __resolveURL(baseurl, cookiepath, url):
   page = urllib2.urlopen(req);XML_FILE = page.read();page.close()
 
   #check that the link is valid
-  if is_valid(XML_FILE = XML_FILE) == True:
+  if is_valid(baseurl, XML_FILE = XML_FILE) == True:
 
        #try getting the Original File url. (requires premium). Returns None if you are a non-premium user.
        if cookiepath is not None: Original_File = __getPremiumUrl(baseurl, cookiepath, code, login_code)
-
+       else: Original_File = None
+       
        #Initialize the decryptor.
        decrypter = Megavideo_Decrypt(XML_FILE)
 
@@ -154,7 +194,10 @@ def __resolveURL(baseurl, cookiepath, url):
 
 
 def is_valid(baseurl,url=False,XML_FILE=False):
-     if XML_FILE = False:
+
+     baseurl=setBaseURL(baseurl)
+       
+     if XML_FILE == False:
           #get the code from a url, unless only code is supplied.
           l = len(url)
           if(l > 8):

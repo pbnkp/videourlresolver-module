@@ -1,0 +1,12 @@
+API notes:
+videourlresolver should return a dictionary, so the user can receive more than one value at once.
+
+ie. add-on coder does 
+resolved = videourlresolver(url)
+
+they then can use these dict entries:
+resolved['filename']
+resolved['url']
+
+or if a list of urls were sent to videourlresolver
+resolved['urls']
