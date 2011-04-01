@@ -29,9 +29,9 @@
  TO CHECK IF A LINK IS STILL ONLINE (optional):
  - Returns True or False
 
- ===================================== 
- print megavideo.is_valid(baseurl,url)
- =====================================
+ ====================================== 
+ print megavideo.is_online(baseurl,url)
+ ======================================
 
 
 
@@ -168,7 +168,7 @@ def resolveURL(baseurl, cookiepath, url):
   page = urllib2.urlopen(req);XML_FILE = page.read();page.close()
 
   #check that the link is valid
-  if is_valid(baseurl, XML_FILE = XML_FILE) == True:
+  if is_online(baseurl, XML_FILE = XML_FILE) == True:
 
        #try getting the Original File url. (requires premium). Returns None if you are a non-premium user.
        if cookiepath is not None: Original_File = __getPremiumUrl(baseurl, cookiepath, code, login_code)
@@ -193,7 +193,7 @@ def resolveURL(baseurl, cookiepath, url):
 
 
 
-def is_valid(baseurl,url=False,XML_FILE=False):
+def is_online(baseurl,url=False,XML_FILE=False):
 
      baseurl=setBaseURL(baseurl)
        
