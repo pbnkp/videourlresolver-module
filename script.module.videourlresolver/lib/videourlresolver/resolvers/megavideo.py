@@ -178,8 +178,11 @@ def resolveURL(baseurl, cookiepath, url):
        decrypter = Megavideo_Decrypt(XML_FILE)
 
        #Create the FLV url.
-       FLV_File = ["http://www" + getServer(XML_FILE) + baseurl[10:25] + "files/" + decrypter.getDecrypted() + "/stream.flv"]
+       FLV_File = "http://www" + str(getServer(XML_FILE)) + baseurl[10:25] + "files/" + str(decrypter.getDecrypted()) + "/stream.flv"
 
+       #Fix the FLV url if it is a porn url
+       FLV_File = re.sub('vfiles', 'files', FLV_File)
+       
        #Get some metadata from the XML_FILE
        title = getTitle(XML_FILE)
        description = getDescription(XML_FILE)
