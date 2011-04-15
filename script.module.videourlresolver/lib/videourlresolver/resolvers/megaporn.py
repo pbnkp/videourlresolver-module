@@ -1,10 +1,10 @@
 '''
- Megaupload.com resolver (uses functions from _megaupload)
+ Megaupload resolver (uses functions from _megaupload)
 '''
 import filehostmodule
-import _megaupload
+from _megaupload import *
 
-class MegauploadModule(filehostmodule.FileHostModule):
+class MegapornModule(filehostmodule.FileHostModule):
     
     def __init__(self):
         self.username=""

@@ -10,7 +10,9 @@ def _functionId(obj, nFramesUp):
 def notImplemented(obj=None):
 	""" Use this instead of 'pass' for the body of abstract methods. """
 	raise Exception("Unimplemented abstract method: %s" % _functionId(obj, 1))
-		
+
+
+#class that is inherited by all resolvers.		
 class FileHostModule:
 	"""
 	Generic FileHostModule for resolving and checking links for file hosts within XBMC addons
@@ -81,7 +83,8 @@ class FileHostModule:
 
 ########## Helper/convenience functions that might work for all plugins #####
 
-	def isValidLink(self, url):
+	def
+	(self, url):
 		"""
 		Checks if the supplied link is valid for this file host
 		"""
@@ -156,7 +159,6 @@ class FileHostModule:
 		except:
 			return ""
 		
-
 	
 	def getPlaylistItem(self,url):
 		"""
