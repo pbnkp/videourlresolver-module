@@ -141,13 +141,17 @@ def check_login(source):
         #returns 'none' if not logged in
         
         login = re.search('Welcome', source)
-        premium = re.search('flashvars.status = "premium";', source)        
+        premium = re.search('flashvars.status = "premium";', source)
+        platinum = re.search('flashvars.status = "platinum";', source)       
 
         if login is not None:
             if premium is not None:
                 return 'premium'
             elif premium is None:
-                return 'free'
+                if platinum is not None:
+                    return 'premium'
+                elif platinum is None:
+                    return 'free'
         elif login is None:
             return None
 
